@@ -5,6 +5,7 @@ var ip = '54.93.181.197';
 var idMe;
 
 var url = 'http://' + ip + ':7474/db/data/transaction/commit';
+// @TODO: Fix for when user has no children yet
 var query = "MATCH (user:User {name: 'me'})-->(children) return user, ID(user), children, ID(children)";
 var params = {limit: 10};
 var json = {
