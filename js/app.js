@@ -3,10 +3,11 @@
 var ip = '54.93.181.197';
 
 var idMe;
+var name = 'Gilles Wittenberg';
 
 var url = 'http://' + ip + ':7474/db/data/transaction/commit';
 // @TODO: Fix for when user has no children yet
-var query = "MATCH (user:User {name: 'me'})-->(children) return user, ID(user), children, ID(children)";
+var query = "MATCH (user:User {name: '" + name + "'})-->(children) return user, ID(user), children, ID(children)";
 var params = {limit: 10};
 var json = {
   statements: [
@@ -54,7 +55,7 @@ form.addEventListener('submit', function (event) {
   event.preventDefault();
 
   var text = input.value;
-  var query = "MATCH (user: User {name: 'me'}) CREATE (node:Text {text: '" + text + "'})<-[r:Child]-(user) RETURN node, ID(node)";
+  var query = "MATCH (user: User {name: '" + name + "'}) CREATE (node:Text {text: '" + text + "'})<-[r:Child]-(user) RETURN node, ID(node)";
   var json = {
     statements: [
       {

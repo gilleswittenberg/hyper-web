@@ -5,11 +5,14 @@ function Item (id, text, children) {
 
   // elem li
   this.elem = document.createElement('li');
-  this.elem.appendChild(document.createTextNode(text));
+  var span = document.createElement('span');
+  span.appendChild(document.createTextNode(text));
+  this.elem.appendChild(span);
 
   // elem button
   var button = document.createElement('button');
-  button.appendChild(document.createTextNode('delete'));
+  button.appendChild(document.createTextNode('X'));
+  button.classList.add('delete');
   button.addEventListener('click', this.onClick.bind(this));
   this.elem.appendChild(button);
 
@@ -23,7 +26,7 @@ function Item (id, text, children) {
   this.input.setAttribute('type', 'text');
   var inputSubmit = document.createElement('input');
   inputSubmit.setAttribute('type', 'submit');
-  inputSubmit.setAttribute('value', 'Add');
+  inputSubmit.setAttribute('value', '+');
   form.appendChild(this.input);
   form.appendChild(inputSubmit);
   form.addEventListener('submit', this.onSubmit.bind(this));

@@ -1,0 +1,62 @@
+body {
+  font-family: sans-serif;
+}
+
+h1, li, input, button {
+  font-size: 14px;
+}
+
+.wrapper {
+  width: 500px;
+  margin: 0 auto;
+  margin-top: 200px;
+}
+
+h1 {
+  padding: 12px;
+  margin-top: 0;
+  background-color: silver;
+  margin-bottom: 48px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 48px;
+}
+li span {
+  display: inline-block;
+  width: 434px;
+  padding: 12px;
+  background-color: silver;
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+button.delete {
+  float: right;
+}
+
+input[type="text"] {
+  border: 1px solid silver;
+  padding: 0 4px;
+  height: 38px;
+  width: 445px;
+}
+
+li input[type="submit"] {
+  margin-left: 5px;
+}
+
+input[type="submit"], button {
+  background-color: silver;
+  border: none;
+  outline: none;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
