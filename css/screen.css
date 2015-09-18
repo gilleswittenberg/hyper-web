@@ -25,7 +25,12 @@ ul {
   margin: 0;
 }
 
-li {
+ul ul, ul form {
+  position: relative;
+  left: 24px;
+}
+
+div > ul > li {
   margin-bottom: 48px;
 }
 li span {
@@ -46,6 +51,7 @@ input[type="text"] {
   padding: 0 4px;
   height: 38px;
   width: 445px;
+  margin-bottom: 4px;
 }
 
 li input[type="submit"] {

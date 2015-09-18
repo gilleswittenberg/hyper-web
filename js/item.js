@@ -55,6 +55,8 @@ Item.prototype.onClick = function (event) {
 Item.prototype.onSubmit = function (event) {
   event.preventDefault();
   this.add(this.input.value);
+  // @TODO: Wait for success
+  this.input.value = "";
 };
 
 Item.prototype.add = function (text) {
