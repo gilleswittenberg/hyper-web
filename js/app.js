@@ -50,6 +50,8 @@ Items.Model.prototype.save = function () {
     method: method,
     url: url + 'nodes/',
     data: data
+  }).then(function (response) {
+    console.log(response);
   });
 };
 Items.Model.prototype.createChild = function (text) {
