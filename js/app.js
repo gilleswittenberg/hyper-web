@@ -76,33 +76,35 @@ Items.Model.prototype.removeChild = function (id) {
 // controller
 Items.Controller = function () {};
 
-// view
+// views
 Items.View = {};
 Items.View.Items = function (ctrl) {
-
   return [
     m('h1', Items.Root.name()),
     m('div', {className: 'wrapper'}, [
-      Items.Root.children().map(Items.View.Item.bind(ctrl))
+      Items.Root.children().map(Items.View.Item.bind(ctrl)),
+      Items.View.Form(Items.Root)
     ])
   ];
 };
-
 Items.View.Item = function (model) {
-
   return m('ul', [
     m('li', {className: ''}, [
       m('span', model.text()),
       m('button.delete', {onclick: model.del.bind(model)}, 'X'),
       model.children().map(Items.View.Item.bind(this)),
-      m('form', {onsubmit: model.vm.add.bind(model.vm)}, [
-        m('input[type=text]', {onchange: m.withAttr('value', model.vm.val), value: model.vm.val()}),
-        m('input[type=submit]', {value: '+'})
-      ])
+      Items.View.Form(model)
     ])
   ]);
 };
+Items.View.Form = function (model) {
+  return m('form', {onsubmit: model.vm.add.bind(model.vm)}, [
+    m('input[type=text]', {onchange: m.withAttr('value', model.vm.val), value: model.vm.val()}),
+    m('input[type=submit]', {value: '+'})
+  ]);
+};
 
+// view model
 Items.ViewModel = function (model) {
   this.val = m.prop('');
   this.model = m.prop(model);
