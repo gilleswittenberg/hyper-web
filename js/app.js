@@ -14,6 +14,7 @@ Items.Model = function (data) {
   this.parentId = m.prop(data.parentId);
   this.parent = m.prop(data.parent);
   this.children = m.prop([]);
+  this.isRoot = m.prop(data.isRoot);
   if (data.children) {
     data.children.forEach(function (data) {
       data.parent = this;
@@ -78,23 +79,25 @@ Items.Controller = function () {};
 
 // views
 Items.View = {};
-Items.View.Items = function (ctrl) {
+Items.View.Root = function (ctrl) {
   return [
-    m('h1', Items.Root.name()),
     m('div', {className: 'wrapper'}, [
-      Items.Root.children().map(Items.View.Item.bind(ctrl)),
-      Items.View.Form(Items.Root)
+      m('h1', Items.Root.name()),
+      Items.View.Children(Items.Root)
     ])
   ];
 };
+Items.View.Children = function (model) {
+  return  m('ul', [
+    model.children().map(Items.View.Item),
+    m('li', Items.View.Form(model))
+  ]);
+};
 Items.View.Item = function (model) {
-  return m('ul', [
-    m('li', {className: ''}, [
-      m('span', model.text()),
-      m('button.delete', {onclick: model.del.bind(model)}, 'X'),
-      model.children().map(Items.View.Item.bind(this)),
-      Items.View.Form(model)
-    ])
+  return m('li', [
+    m('span', model.text()),
+    m('button.delete', {onclick: model.del.bind(model)}, 'X'),
+    Items.View.Children(model)
   ]);
 };
 Items.View.Form = function (model) {
@@ -107,6 +110,7 @@ Items.View.Form = function (model) {
 // view model
 Items.ViewModel = function (model) {
   this.val = m.prop('');
+  this.showChildren = m.prop(false);
   this.model = m.prop(model);
 };
 Items.ViewModel.prototype.add = function (event) {
@@ -116,14 +120,18 @@ Items.ViewModel.prototype.add = function (event) {
     this.val('');
   }
 };
+Items.ViewModel.prototype.toggle = function (event) {
+  this.showChildren(!this.showChildren());
+};
 
 // initialize
 m.request({
   method: 'GET',
   url: url + 'nodes'
 }).then(function (response) {
+  response.isRoot = true;
   Items.Root = new Items.Model(response);
-  m.mount(document.body, {controller: Items.Controller, view: Items.View.Items});
+  m.mount(document.body, {controller: Items.Controller, view: Items.View.Root});
 });
 
 
