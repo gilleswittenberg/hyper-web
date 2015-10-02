@@ -21,8 +21,8 @@ Items.Model = function (data) {
       this.children().push(new Items.Model(data));
     }.bind(this));
   }
-  this.name = m.prop(data.name)
-  this.text = m.prop(data.text)
+  this.name = m.prop(data.name);
+  this.text = m.prop(data.text);
   this.vm = new Items.ViewModel(this);
 };
 Items.Model.prototype.del = function () {
@@ -71,7 +71,7 @@ Items.Model.prototype.removeChild = function (id) {
       this.children().splice(index, 1);
     }
   }.bind(this));
-}
+};
 
 // controller
 Items.Controller = function () {};
