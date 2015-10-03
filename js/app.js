@@ -31,6 +31,9 @@ Items.Model = function (data) {
 };
 Items.Model.prototype.del = function () {
 
+  // @TODO: Allow deletion before server responded a save call
+  if (!this.id()) return;
+
   this.parent().removeChild(this.id());
 
   return m.request({
@@ -55,8 +58,8 @@ Items.Model.prototype.save = function () {
     url: url + 'nodes/',
     data: data
   }).then(function (response) {
-    console.log(response);
-  });
+    this.id(response.id);
+  }.bind(this));
 };
 Items.Model.prototype.createChild = function (text) {
   var child = new Items.Model({
