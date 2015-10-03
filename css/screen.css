@@ -44,7 +44,7 @@ li span {
 }
 
 button.delete {
-  float: right;
+  margin-left: 2px;
 }
 
 input[type="text"] {

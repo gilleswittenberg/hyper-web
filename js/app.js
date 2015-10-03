@@ -17,9 +17,12 @@ Items.Model = function (data) {
   this.isRoot = m.prop(data.isRoot);
   if (data.children) {
     data.children.forEach(function (data) {
+      var model, vm;
       data.parent = this;
       data.parentId = this.id();
-      this.children().push(new Items.Model(data));
+      model = new Items.Model(data);
+      vm = new Items.ViewModel(model);
+      this.children().push(vm);
     }.bind(this));
   }
   this.name = m.prop(data.name);
@@ -61,14 +64,13 @@ Items.Model.prototype.createChild = function (text) {
     parentId: this.id(),
     text: text
   });
-
-  this.children().push(child);
-
+  var vm = new Items.ViewModel(child);
+  this.children().push(vm);
   return child.save();
 };
 Items.Model.prototype.removeChild = function (id) {
-  this.children().forEach(function (child, index) {
-    if (child.id() === id) {
+  this.children().forEach(function (vm, index) {
+    if (vm.model().id() === id) {
       this.children().splice(index, 1);
     }
   }.bind(this));
@@ -82,7 +84,8 @@ Items.Controller = function () {
     url: url + 'nodes'
   }).then(function (response) {
     response.isRoot = true;
-    this.Root = new Items.Model(response);
+    var model = new Items.Model(response);
+    this.vm = new Items.ViewModel(model);
   }.bind(this));
 };
 
@@ -91,36 +94,44 @@ Items.View = {};
 Items.View.Root = function (ctrl) {
   return [
     m('div', {className: 'wrapper'}, [
-      m('h1', ctrl.Root.name()),
-      Items.View.Children(ctrl.Root)
+      m('h1', ctrl.vm.model().name()),
+      Items.View.Children(ctrl.vm)
     ])
   ];
 };
-Items.View.Children = function (model) {
+Items.View.Children = function (vm) {
   return  m('ul', [
-    model.children().map(Items.View.Item),
-    m('li', Items.View.Form(model))
+    vm.model().children().map(Items.View.Item),
+    m('li', Items.View.Form(vm))
   ]);
 };
-Items.View.Item = function (model) {
+Items.View.Item = function (vm) {
   return m('li', [
-    m('span', model.text()),
-    m('button.delete', {onclick: model.del.bind(model)}, 'X'),
-    Items.View.Children(model)
+    m('span', vm.model().text()),
+    m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
+    Items.View.Children(vm)
   ]);
 };
-Items.View.Form = function (model) {
-  return m('form', {onsubmit: model.vm.add.bind(model.vm)}, [
-    m('input[type=text]', {onchange: m.withAttr('value', model.vm.val), value: model.vm.val()}),
+Items.View.Form = function (vm) {
+  return m('form', {onsubmit: vm.add.bind(vm)}, [
+    m('input[type=text]', {onchange: m.withAttr('value', vm.val), value: vm.val()}),
     m('input[type=submit]', {value: '+'})
   ]);
 };
 
 // view model
 Items.ViewModel = function (model) {
+
+  // model data
+  this.model = m.prop(model);
+
+  // view model data
   this.val = m.prop('');
   this.showChildren = m.prop(false);
-  this.model = m.prop(model);
+};
+Items.ViewModel.prototype.del = function (event) {
+  event.preventDefault();
+  this.model().del();
 };
 Items.ViewModel.prototype.add = function (event) {
   event.preventDefault();
@@ -135,4 +146,3 @@ Items.ViewModel.prototype.toggle = function (event) {
 
 // mount
 m.mount(document.body, {controller: Items.Controller, view: Items.View.Root});
-
