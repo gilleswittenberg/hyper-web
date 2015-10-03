@@ -102,14 +102,14 @@ Items.View.Root = function (ctrl) {
   ];
 };
 Items.View.Children = function (vm) {
-  return  m('ul', [
+  return  m('ul', {className: vm.showChildren() ? 'show-children' : ''}, [
     vm.model().children().map(Items.View.Item),
     m('li', Items.View.Form(vm))
   ]);
 };
 Items.View.Item = function (vm) {
   return m('li', [
-    m('span', vm.model().text()),
+    m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
     m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
     Items.View.Children(vm)
   ]);
@@ -129,7 +129,7 @@ Items.ViewModel = function (model) {
 
   // view model data
   this.val = m.prop('');
-  this.showChildren = m.prop(false);
+  this.showChildren = m.prop(model.isRoot());
 };
 Items.ViewModel.prototype.del = function (event) {
   event.preventDefault();

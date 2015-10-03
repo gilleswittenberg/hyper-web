@@ -16,14 +16,17 @@ h1 {
   padding: 12px;
   margin-top: 0;
   background-color: silver;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
 }
 
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  /*display: none;*/
+  display: none;
+}
+ul.show-children {
+  display: block;
 }
 
 ul ul {
@@ -32,19 +35,20 @@ ul ul {
 }
 
 div > ul > li {
-  margin-bottom: 48px;
+  /*margin-bottom: 48px;*/
 }
 li span {
   display: inline-block;
-  width: 434px;
+  width: 430px;
   padding: 12px;
   background-color: silver;
   height: 16px;
   margin-bottom: 4px;
+  cursor: pointer;
 }
 
 button.delete {
-  margin-left: 2px;
+  margin-left: 6px;
 }
 
 input[type="text"] {
