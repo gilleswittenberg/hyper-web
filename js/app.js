@@ -75,15 +75,24 @@ Items.Model.prototype.removeChild = function (id) {
 };
 
 // controller
-Items.Controller = function () {};
+Items.Controller = function () {
+
+  m.request({
+    method: 'GET',
+    url: url + 'nodes'
+  }).then(function (response) {
+    response.isRoot = true;
+    this.Root = new Items.Model(response);
+  }.bind(this));
+};
 
 // views
 Items.View = {};
 Items.View.Root = function (ctrl) {
   return [
     m('div', {className: 'wrapper'}, [
-      m('h1', Items.Root.name()),
-      Items.View.Children(Items.Root)
+      m('h1', ctrl.Root.name()),
+      Items.View.Children(ctrl.Root)
     ])
   ];
 };
@@ -124,14 +133,6 @@ Items.ViewModel.prototype.toggle = function (event) {
   this.showChildren(!this.showChildren());
 };
 
-// initialize
-m.request({
-  method: 'GET',
-  url: url + 'nodes'
-}).then(function (response) {
-  response.isRoot = true;
-  Items.Root = new Items.Model(response);
-  m.mount(document.body, {controller: Items.Controller, view: Items.View.Root});
-});
-
+// mount
+m.mount(document.body, {controller: Items.Controller, view: Items.View.Root});
 
