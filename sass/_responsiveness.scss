@@ -1,0 +1,14 @@
+$breakpoint: $width;
+
+@mixin respond($size) {
+  @if $size == mobile {
+    @media (max-width: $breakpoint - 1) {
+      @content;
+    }
+  }
+  @else if $size == desktop {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
+  }
+}

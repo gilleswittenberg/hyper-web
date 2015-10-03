@@ -1,78 +1,86 @@
-body {
-  font-family: sans-serif;
-}
+@import "variables";
+@import "responsiveness";
+@import "reset";
 
-h1, li, input, button {
-  font-size: 14px;
+body {
+  margin: $spacing;
 }
 
 .wrapper {
-  max-width: 500px;
+  max-width: $width - 2 * $spacing;
   margin: 0 auto;
-  margin-top: 200px;
+  @include respond(desktop) {
+    margin-top: 200px;
+  }
 }
 
 h1 {
-  padding: 12px;
-  margin-top: 0;
+  padding: $spacing;
   background-color: silver;
-  margin-bottom: 24px;
+  margin-bottom: 2 * $spacing;
 }
 
 ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: none;
-}
-ul.show-children {
-  display: block;
-}
-
-ul ul {
-  position: relative;
-  left: 24px;
+  &.show-children {
+    display: block;
+  }
+  ul {
+    margin-left: $spacing;
+  }
 }
 
-li span {
-  display: inline-block;
-  width: 476px;
-  padding: 12px;
-  background-color: silver;
-  height: 16px;
-  margin-bottom: 4px;
-  cursor: pointer;
+div.item {
+
+  span {
+    display: block;
+    background-color: silver;
+    padding: $spacing;
+    height: $sizeButton - 2 * $spacing;
+    margin-bottom: $spacingSmall;
+    cursor: pointer;
+  }
+
+  button.delete {
+    float: right;
+    display: none;
+    margin-left: $spacingSmall;
+  }
+
+  &:hover {
+    button.delete {
+      display: inline-block;
+    }
+    span {
+      margin-right: $sizeButton + $spacingSmall;
+    }
+  }
 }
 
-button.delete {
-  display: none;
-  margin-left: 6px;
-}
-
-div.item:hover button.delete {
-  display: inline-block;
-}
-div.item:hover span {
-  width: 430px;
+form {
+  span {
+    display: block;
+    margin-right: $sizeButton + $spacingSmall + 2 * 1px;
+  }
 }
 
 input[type="text"] {
+  display: block;
+  width: 100%;
   border: 1px solid silver;
-  padding: 0 4px;
-  height: 38px;
-  width: 445px;
-  margin-bottom: 4px;
+  height: $sizeButton - 2 * 1px;
+  margin-bottom: $spacingSmall;
 }
 
 li input[type="submit"] {
-  margin-left: 5px;
+  margin-left: $spacingSmall;
+  float: right;
 }
 
 input[type="submit"], button {
   background-color: silver;
   border: none;
   outline: none;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
+  width: $sizeButton;
+  height: $sizeButton;
 }

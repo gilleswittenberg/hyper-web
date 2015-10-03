@@ -1,0 +1,23 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+}
+
+h1, ul, li, input, button {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+ul {
+  list-style: none;
+}
+
+input, button {
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+button, input[type="submit"] {
+  cursor: pointer;
+}

@@ -110,16 +110,16 @@ Items.View.Children = function (vm) {
 Items.View.Item = function (vm) {
   return m('li', [
     m('div.item', [
-      m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
+      m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text())
     ]),
     Items.View.Children(vm)
   ]);
 };
 Items.View.Form = function (vm) {
   return m('form', {onsubmit: vm.add.bind(vm)}, [
-    m('input[type=text]', {onchange: m.withAttr('value', vm.val), value: vm.val()}),
-    m('input[type=submit]', {value: '+'})
+    m('input[type=submit]', {value: '+'}),
+    m('span', m('input[type=text]', {onchange: m.withAttr('value', vm.val), value: vm.val()}))
   ]);
 };
 
