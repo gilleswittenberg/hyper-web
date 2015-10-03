@@ -27,7 +27,6 @@ Items.Model = function (data) {
   }
   this.name = m.prop(data.name);
   this.text = m.prop(data.text);
-  this.vm = new Items.ViewModel(this);
 };
 Items.Model.prototype.del = function () {
 
