@@ -1,0 +1,23 @@
+{
+  "name": "hyper-web",
+  "version": "0.0.0",
+  "description": "localhost:7575 (/usr/local/etc/nginx/nginx.conf)",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gilleswittenberg/hyper-web.git"
+  },
+  "author": "Gilles Wittenberg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gilleswittenberg/hyper-web/issues"
+  },
+  "homepage": "https://github.com/gilleswittenberg/hyper-web#readme",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-sass": "^2.0.4"
+  }
+}

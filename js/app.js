@@ -1,7 +1,7 @@
 
 
 //var url = 'http://54.93.181.197:7676/';
-var url = 'http://localhost:7676/';
+var url = 'http://192.168.178.21:7676/';
 
 // components
 var Items = {};
@@ -109,8 +109,10 @@ Items.View.Children = function (vm) {
 };
 Items.View.Item = function (vm) {
   return m('li', [
-    m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
-    m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
+    m('div.item', [
+      m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
+      m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
+    ]),
     Items.View.Children(vm)
   ]);
 };

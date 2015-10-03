@@ -7,7 +7,7 @@ h1, li, input, button {
 }
 
 .wrapper {
-  width: 500px;
+  max-width: 500px;
   margin: 0 auto;
   margin-top: 200px;
 }
@@ -34,12 +34,9 @@ ul ul {
   left: 24px;
 }
 
-div > ul > li {
-  /*margin-bottom: 48px;*/
-}
 li span {
   display: inline-block;
-  width: 430px;
+  width: 476px;
   padding: 12px;
   background-color: silver;
   height: 16px;
@@ -48,7 +45,15 @@ li span {
 }
 
 button.delete {
+  display: none;
   margin-left: 6px;
+}
+
+div.item:hover button.delete {
+  display: inline-block;
+}
+div.item:hover span {
+  width: 430px;
 }
 
 input[type="text"] {
