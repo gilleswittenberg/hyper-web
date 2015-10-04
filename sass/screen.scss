@@ -69,7 +69,7 @@ div.item {
 form {
   span {
     display: block;
-    margin-right: $sizeButton + $spacingSmall + 2 * 1px;
+    margin-right: 2* $spacing + $sizeButton + $spacingSmall + 2 * 1px;
   }
 }
 
@@ -79,6 +79,7 @@ input[type="text"] {
   border: 1px solid silver;
   height: $sizeButton - 2 * 1px;
   margin-bottom: $spacingSmall;
+  padding: 0 $spacing;
 }
 
 li input[type="submit"] {
