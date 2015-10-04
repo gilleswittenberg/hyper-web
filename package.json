@@ -18,6 +18,7 @@
   "homepage": "https://github.com/gilleswittenberg/hyper-web#readme",
   "devDependencies": {
     "gulp": "^3.9.0",
+    "gulp-jshint": "^1.11.2",
     "gulp-sass": "^2.0.4"
   }
 }
