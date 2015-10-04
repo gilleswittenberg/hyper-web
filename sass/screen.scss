@@ -39,20 +39,29 @@ div.item {
     height: $sizeButton - 2 * $spacing;
     margin-bottom: $spacingSmall;
     cursor: pointer;
+    margin-right: $sizeButton + $spacingSmall;
+    html.no-touchevents & {
+      margin-right: 0;
+    }
   }
 
   button.delete {
     float: right;
-    display: none;
+    display: inline-block;
+    html.no-touchevents & {
+      display: none;
+    }
     margin-left: $spacingSmall;
   }
 
-  &:hover {
-    button.delete {
-      display: inline-block;
-    }
-    span {
-      margin-right: $sizeButton + $spacingSmall;
+  html.no-touchevents & {
+    &:hover {
+      button.delete {
+        display: inline-block;
+      }
+      span {
+        margin-right: $sizeButton + $spacingSmall;
+      }
     }
   }
 }
