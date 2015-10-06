@@ -49,6 +49,7 @@ Items.Model.prototype.save = function () {
     data.parentId = this.parentId();
   } else {
     method = 'PUT';
+    data.id = this.id();
   }
   data.text = this.text;
 
@@ -104,22 +105,40 @@ Items.View.Root = function (ctrl) {
 Items.View.Children = function (vm) {
   return  m('ul', {className: vm.showChildren() ? 'show-children' : ''}, [
     vm.model().children().map(Items.View.Item),
-    m('li', Items.View.Form(vm))
+    m('li', Items.View.FormAdd(vm))
   ]);
 };
 Items.View.Item = function (vm) {
   return m('li', [
-    m('div.item', [
+    m('div.item', {className: vm.isEditing() ? 'is-editing' : ''}, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
-      m('span', {onclick: vm.toggle.bind(vm)}, vm.model().text())
+      m('button.edit', {onclick: vm.edit.bind(vm)}, 'E'),
+      m('span.content', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
+      Items.View.FormEdit(vm)
     ]),
     Items.View.Children(vm)
   ]);
 };
-Items.View.Form = function (vm) {
+Items.View.FormAdd = function (vm) {
   return m('form', {onsubmit: vm.add.bind(vm)}, [
     m('input[type=submit]', {value: '+'}),
     m('span', m('input[type=text]', {onchange: m.withAttr('value', vm.val), value: vm.val()}))
+  ]);
+};
+Items.View.FormEdit = function (vm) {
+  return m('form', {class: 'edit', onsubmit: vm.save.bind(vm)}, [
+    m('input[type="submit"]', {value: 'S'}),
+    m('span',
+      m('input[type="text"]', {
+        onchange: m.withAttr('value', vm.editVal),
+        value: vm.editVal(),
+        config: function (element) {
+          if (vm.isEditing()) {
+            element.focus();
+          }
+        }
+      })
+    )
   ]);
 };
 
@@ -130,12 +149,26 @@ Items.ViewModel = function (model) {
   this.model = m.prop(model);
 
   // view model data
+  this.isEditing = m.prop(false);
   this.val = m.prop('');
+  this.editVal = m.prop(model.text());
   this.showChildren = m.prop(model.isRoot());
 };
 Items.ViewModel.prototype.del = function (event) {
   event.preventDefault();
   this.model().del();
+};
+Items.ViewModel.prototype.edit = function (event) {
+  event.preventDefault();
+  this.isEditing(!this.isEditing());
+};
+Items.ViewModel.prototype.save = function (event) {
+  event.preventDefault();
+  if (this.editVal() !== this.model().text()) {
+    this.model().text(this.editVal());
+    this.model().save();
+  }
+  this.isEditing(false);
 };
 Items.ViewModel.prototype.add = function (event) {
   event.preventDefault();

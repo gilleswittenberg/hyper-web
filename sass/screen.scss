@@ -32,20 +32,20 @@ ul {
 
 div.item {
 
-  span {
+  span.content {
     display: block;
     background-color: silver;
     padding: $spacing;
     height: $sizeButton - 2 * $spacing;
     margin-bottom: $spacingSmall;
     cursor: pointer;
-    margin-right: $sizeButton + $spacingSmall;
+    margin-right: 2 * ($sizeButton + $spacingSmall);
     html.no-touchevents & {
       margin-right: 0;
     }
   }
 
-  button.delete {
+  button.edit, button.delete {
     float: right;
     display: inline-block;
     html.no-touchevents & {
@@ -56,12 +56,25 @@ div.item {
 
   html.no-touchevents & {
     &:hover {
-      button.delete {
+      button.edit, button.delete {
         display: inline-block;
       }
-      span {
-        margin-right: $sizeButton + $spacingSmall;
+      span.content {
+        margin-right: 2 * ($sizeButton + $spacingSmall);
       }
+    }
+  }
+
+  form.edit {
+    display: none;
+  }
+
+  &.is-editing {
+    span.content, button.edit, button.delete {
+      display: none !important;
+    }
+    form.edit {
+      display: block;
     }
   }
 }
@@ -69,7 +82,7 @@ div.item {
 form {
   span {
     display: block;
-    margin-right: 2* $spacing + $sizeButton + $spacingSmall + 2 * 1px;
+    margin-right: 2 * $spacing + $sizeButton + $spacingSmall + 2 * 1px;
   }
 }
 
