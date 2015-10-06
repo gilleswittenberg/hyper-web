@@ -32,12 +32,18 @@ ul {
 
 div.item {
 
+  margin-bottom: $spacingSmall;
+
+  &.is-drag-over {
+    border-bottom: $spacingSmall solid black;
+    margin-bottom: 0;
+  }
+
   span.content {
     display: block;
     background-color: silver;
     padding: $spacing;
     height: $sizeButton - 2 * $spacing;
-    margin-bottom: $spacingSmall;
     cursor: pointer;
     margin-right: 2 * ($sizeButton + $spacingSmall);
     html.no-touchevents & {

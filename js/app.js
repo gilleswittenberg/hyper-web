@@ -81,7 +81,6 @@ Items.Model.prototype.removeChild = function (id) {
 
 // controller
 Items.Controller = function () {
-
   m.request({
     method: 'GET',
     url: url + 'nodes'
@@ -110,7 +109,23 @@ Items.View.Children = function (vm) {
 };
 Items.View.Item = function (vm) {
   return m('li', [
-    m('div.item', {className: vm.isEditing() ? 'is-editing' : ''}, [
+    m('div.item', {
+      class: [
+        vm.isEditing() ? 'is-editing ' : '',
+        vm.dragOver() ? 'is-drag-over ' : ''
+      ].join(' '),
+      draggable: true,
+      config: function (element, isInitialized) {
+        if (isInitialized) return;
+        element.addEventListener('dragstart', vm.ondragstart.bind(vm), false);
+        // required to allow drop
+        element.addEventListener('dragover', function (event) { event.preventDefault(); }, false);
+        element.addEventListener('dragenter', vm.ondragenter.bind(vm), false);
+        element.addEventListener('dragleave', vm.ondragleave.bind(vm), false);
+        element.addEventListener('dragend', vm.ondragend.bind(vm), false);
+        element.addEventListener('drop', vm.ondrop.bind(vm), false);
+      }
+    }, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
       m('button.edit', {onclick: vm.edit.bind(vm)}, 'E'),
       m('span.content', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
@@ -153,6 +168,7 @@ Items.ViewModel = function (model) {
   this.val = m.prop('');
   this.editVal = m.prop(model.text());
   this.showChildren = m.prop(model.isRoot());
+  this.dragOver = m.prop(false);
 };
 Items.ViewModel.prototype.del = function (event) {
   event.preventDefault();
@@ -179,6 +195,27 @@ Items.ViewModel.prototype.add = function (event) {
 };
 Items.ViewModel.prototype.toggle = function (event) {
   this.showChildren(!this.showChildren());
+};
+Items.ViewModel.prototype.ondragstart = function (event) {
+  window.itemDragging = this;
+};
+Items.ViewModel.prototype.ondragenter = function (event) {
+  if (window.itemDragging != this) {
+    this.dragOver(true);
+    m.redraw();
+  }
+};
+Items.ViewModel.prototype.ondragleave = function (event) {
+  this.dragOver(false);
+  m.redraw();
+};
+Items.ViewModel.prototype.ondragend = function (event) { /* noop */ };
+Items.ViewModel.prototype.ondrop = function (event) {
+  if (window.itemDragging != this) {
+    // save ordering / relations
+  }
+  this.dragOver(false);
+  m.redraw();
 };
 
 // mount
