@@ -8,9 +8,8 @@ body {
 
 .wrapper {
   max-width: $width - 2 * $spacing;
-  margin: 0 auto;
   @include respond(desktop) {
-    margin-top: 200px;
+    margin: 200px auto;
   }
 }
 
