@@ -10,46 +10,60 @@ var Items = {};
 Items.Model = function (data) {
 
   data = data || {};
-  this.id = m.prop(data.id);
-  this.parentId = m.prop(data.parentId);
-  this.parent = m.prop(data.parent);
-  this.children = m.prop([]);
   this.isRoot = m.prop(data.isRoot);
+  this.uid = m.prop(data.uid);
+  this.parentUId = m.prop(data.parentUId);
+  this.parent = m.prop(data.parent);
+  this.order = m.prop(data.order);
+  this.name = m.prop(data.name);
+  this.text = m.prop(data.text);
+  this.children = m.prop([]);
   if (data.children) {
     data.children.forEach(function (data) {
       var model, vm;
       data.parent = this;
-      data.parentId = this.id();
+      data.parentUId = this.uid();
       model = new Items.Model(data);
       vm = new Items.ViewModel(model);
       this.children().push(vm);
     }.bind(this));
   }
-  this.name = m.prop(data.name);
-  this.text = m.prop(data.text);
+};
+Items.Model.prototype.getAfter = function () {
+  var ret = 0;
+  if (this.children() && this.children().length) {
+    ret = Math.max.apply(Math, this.children().map(function (child) {
+      if (!child.model().order()) {
+        return 0;
+      }
+      return child.model().order();
+    })) + 1;
+  }
+  return ret;
 };
 Items.Model.prototype.del = function () {
 
   // @TODO: Allow deletion before server responded a save call
-  if (!this.id()) return;
+  if (!this.uid()) return;
 
-  this.parent().removeChild(this.id());
+  this.parent().removeChild(this.uid());
 
   return m.request({
     method: 'DELETE',
-    url: url + 'nodes/' + this.id()
+    url: url + 'nodes/' + this.uid()
   });
 };
 Items.Model.prototype.save = function () {
 
   var method, data = {};
 
-  if (!this.id()) {
+  if (!this.uid()) {
     method = 'POST';
-    data.parentId = this.parentId();
+    data.parentUId = this.parentUId();
+    data.order = this.order();
   } else {
     method = 'PUT';
-    data.id = this.id();
+    data.uid = this.uid();
   }
   data.text = this.text;
 
@@ -58,22 +72,24 @@ Items.Model.prototype.save = function () {
     url: url + 'nodes/',
     data: data
   }).then(function (response) {
-    this.id(response.id);
+    // @TODO: Not necessary for PUT
+    this.uid(response.uid);
   }.bind(this));
 };
 Items.Model.prototype.createChild = function (text) {
   var child = new Items.Model({
     parent: this,
-    parentId: this.id(),
+    parentUId: this.uid(),
+    order: this.getAfter(),
     text: text
   });
   var vm = new Items.ViewModel(child);
   this.children().push(vm);
   return child.save();
 };
-Items.Model.prototype.removeChild = function (id) {
+Items.Model.prototype.removeChild = function (uid) {
   this.children().forEach(function (vm, index) {
-    if (vm.model().id() === id) {
+    if (vm.model().uid() === uid) {
       this.children().splice(index, 1);
     }
   }.bind(this));
@@ -211,6 +227,7 @@ Items.ViewModel.prototype.ondragleave = function (event) {
 };
 Items.ViewModel.prototype.ondragend = function (event) { /* noop */ };
 Items.ViewModel.prototype.ondrop = function (event) {
+  // @TODO: Find way to compare strictly
   if (window.itemDragging != this) {
     // save ordering / relations
   }
