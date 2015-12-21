@@ -1,7 +1,7 @@
 
 
-//var url = 'http://54.93.181.197:7676/';
-var url = 'http://192.168.178.21:7676/';
+//var url = 'http://54.93.181.197:7676/'; // production
+var url = 'http://192.168.178.21:7676/'; // localhost (Wingerdweg 107-I)
 
 // components
 var Items = {};
@@ -60,11 +60,11 @@ Items.Model.prototype.save = function () {
   if (!this.uid()) {
     method = 'POST';
     data.parentUId = this.parentUId();
-    data.order = this.order();
   } else {
     method = 'PUT';
     data.uid = this.uid();
   }
+  data.order = this.order();
   data.text = this.text;
 
   return m.request({
@@ -93,6 +93,36 @@ Items.Model.prototype.removeChild = function (uid) {
       this.children().splice(index, 1);
     }
   }.bind(this));
+};
+Items.Model.prototype.getNextOrder = function () {
+
+  // @TODO: check for this.order()
+
+  // guard against empty parent or children
+  // length <= 1 because child will count for itself
+  if (!this.parent() || !this.parent().children() || this.parent().children().length <= 1) {
+    // child does not exist
+    return this.order() + 1;
+  }
+
+  var isNext = false;
+  var nextSibling;
+  this.parent().children().forEach(function (child) {
+    if (isNext && !nextSibling) {
+      nextSibling = child.model();
+    }
+    if (child.model().uid() === this.uid()) {
+      isNext = true;
+    }
+  }.bind(this));
+
+  // this is last child
+  if (!nextSibling) {
+    return this.order() + 1;
+  }
+
+  // return value between this and next order
+  return this.order() + (nextSibling.order() - this.order()) / 2;
 };
 
 // controller
@@ -227,9 +257,10 @@ Items.ViewModel.prototype.ondragleave = function (event) {
 };
 Items.ViewModel.prototype.ondragend = function (event) { /* noop */ };
 Items.ViewModel.prototype.ondrop = function (event) {
-  // @TODO: Find way to compare strictly
+  // @TODO: Find way to compare ViewModels strictly (===)
   if (window.itemDragging != this) {
-    // save ordering / relations
+    window.itemDragging.model().order(this.model().getNextOrder());
+    window.itemDragging.model().save();
   }
   this.dragOver(false);
   m.redraw();
