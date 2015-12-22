@@ -29,7 +29,7 @@ Items.Model = function (data) {
     }.bind(this));
   }
 };
-Items.Model.prototype.getAfter = function () {
+Items.Model.prototype.getOrderAfterLastChild = function () {
   var ret = 0;
   if (this.children() && this.children().length) {
     ret = Math.max.apply(Math, this.children().map(function (child) {
@@ -81,7 +81,7 @@ Items.Model.prototype.createChild = function (text) {
   var child = new Items.Model({
     parent: this,
     parentUId: this.uid(),
-    order: this.getAfter(),
+    order: this.getOrderAfterLastChild(),
     text: text
   });
   var vm = new Items.ViewModel(child);
