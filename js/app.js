@@ -77,7 +77,7 @@ Items.Model.prototype.save = function () {
   } else {
     method = 'PUT';
     data.uid = this.uid();
-    data.parentUid = this.parentUId();
+    data.parentUId = this.parentUId();
   }
   data.order = this.order();
   data.text = this.text;
