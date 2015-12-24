@@ -1,6 +1,6 @@
 var m = (function app(window, undefined) {
 	"use strict";
-  	var VERSION = "v0.2.1";
+  	var VERSION = "v0.2.2-rc.1";
 	function isFunction(object) {
 		return typeof object === "function";
 	}
@@ -303,22 +303,19 @@ var m = (function app(window, undefined) {
 		var nodes = cached.nodes;
 		if (!editable || editable !== $document.activeElement) {
 			if (data.$trusted) {
-				clear(nodes, cached);
-				nodes = injectHTML(parentElement, index, data);
-			}
-			//corner case: replacing the nodeValue of a text node that is a child of a textarea/contenteditable doesn't work
-			//we need to update the value property of the parent textarea or the innerHTML of the contenteditable element instead
-			else if (parentTag === "textarea") {
-				parentElement.value = data;
-			}
-			else if (editable) {
-				editable.innerHTML = data;
-			}
-			else {
-				//was a trusted string
-				if (nodes[0].nodeType === 1 || nodes.length > 1) {
-					clear(cached.nodes, cached);
-					nodes = [$document.createTextNode(data)];
+				clear(nodes, cached)
+				nodes = injectHTML(parentElement, index, data)
+			} else if (parentTag === "textarea") {
+				// <textarea> uses `value` instead of `nodeValue`.
+				parentElement.value = data
+			} else if (editable) {
+				// contenteditable nodes use `innerHTML` instead of `nodeValue`.
+				editable.innerHTML = data
+			} else {
+				// was a trusted string
+				if (nodes[0].nodeType === 1 || nodes.length > 1 || (nodes[0].nodeValue.trim && !nodes[0].nodeValue.trim())) {
+					clear(cached.nodes, cached)
+					nodes = [$document.createTextNode(data)]
 				}
 				injectTextNode(parentElement, nodes[0], index, data);
 			}
@@ -448,7 +445,7 @@ var m = (function app(window, undefined) {
 		//Faster to coerce to number and check for NaN
 		var key = +(data && data.attrs && data.attrs.key);
 		data = pendingRequests === 0 || forcing || cachedControllers && cachedControllers.indexOf(controller) > -1 ? data.view(controller) : {tag: "placeholder"};
-		if (data.subtree === "retain") return cached;
+		if (data.subtree === "retain") return data;
 		if (key === key) (data.attrs = data.attrs || {}).key = key;
 		updateLists(views, controllers, view, controller);
 		return data;
@@ -463,6 +460,7 @@ var m = (function app(window, undefined) {
 	function buildObject(data, cached, editable, parentElement, index, shouldReattach, namespace, configs) {
 		var views = [], controllers = [];
 		data = markViews(data, cached, views, controllers);
+		if (data.subtree === "retain") return cached;
 		if (!data.tag && controllers.length) throw new Error("Component template must return a virtual element, not an array, string, etc.");
 		data.attrs = data.attrs || {};
 		cached.attrs = cached.attrs || {};
@@ -624,23 +622,6 @@ var m = (function app(window, undefined) {
 			else if (cached.children.tag) unload(cached.children);
 		}
 	}
-
-	var insertAdjacentBeforeEnd = (function () {
-		var rangeStrategy = function (parentElement, data) {
-			parentElement.appendChild($document.createRange().createContextualFragment(data));
-		};
-		var insertAdjacentStrategy = function (parentElement, data) {
-			parentElement.insertAdjacentHTML("beforeend", data);
-		};
-
-		try {
-			$document.createRange().createContextualFragment('x');
-			return rangeStrategy;
-		} catch (e) {
-			return insertAdjacentStrategy;
-		}
-	})();
-
 	function injectHTML(parentElement, index, data) {
 		var nextSibling = parentElement.childNodes[index];
 		if (nextSibling) {
@@ -653,8 +634,12 @@ var m = (function app(window, undefined) {
 			}
 			else nextSibling.insertAdjacentHTML("beforebegin", data);
 		}
-		else insertAdjacentBeforeEnd(parentElement, data);
-
+		else {
+			if (window.Range && window.Range.prototype.createContextualFragment) {
+				parentElement.appendChild($document.createRange().createContextualFragment(data));
+			}
+			else parentElement.insertAdjacentHTML("beforeend", data);
+		}
 		var nodes = [];
 		while (parentElement.childNodes[index] !== nextSibling) {
 			nodes.push(parentElement.childNodes[index]);
@@ -1008,8 +993,7 @@ var m = (function app(window, undefined) {
 	}
 	function routeUnobtrusive(e) {
 		e = e || event;
-
-		if (e.ctrlKey || e.metaKey || e.which === 2) return;
+		if (e.ctrlKey || e.metaKey || e.shiftKey || e.which === 2) return;
 
 		if (e.preventDefault) e.preventDefault();
 		else e.returnValue = false;
@@ -1017,6 +1001,8 @@ var m = (function app(window, undefined) {
 		var currentTarget = e.currentTarget || e.srcElement;
 		var args = m.route.mode === "pathname" && currentTarget.search ? parseQueryString(currentTarget.search.slice(1)) : {};
 		while (currentTarget && currentTarget.nodeName.toUpperCase() !== "A") currentTarget = currentTarget.parentNode;
+		// clear pendingRequests because we want an immediate route change
+		pendingRequests = 0;
 		m.route(currentTarget[m.route.mode].slice(modes[m.route.mode].length), args);
 	}
 	function setScroll() {
@@ -1089,14 +1075,6 @@ var m = (function app(window, undefined) {
 			return propify(promise.then(resolve, reject), initialValue);
 		};
 		prop["catch"] = prop.then.bind(null, null);
-		prop["finally"] = function(callback) {
-			var _callback = function() {return m.deferred().resolve(callback()).promise;};
-			return prop.then(function(value) {
-				return propify(_callback().then(function() {return value;}), initialValue);
-			}, function(reason) {
-				return propify(_callback().then(function() {throw new Error(reason);}), initialValue);
-			});
-		};
 		return prop;
 	}
 	//Promiz.mithril.js | Zolmeister | MIT
@@ -1188,13 +1166,17 @@ var m = (function app(window, undefined) {
 				return fire();
 			}
 
-			thennable(then, function() {
-				state = RESOLVING;
-				fire();
-			}, function() {
-				state = REJECTING;
-				fire();
-			}, function() {
+			if (state === REJECTING) {
+				m.deferred.onerror(promiseValue)
+			}
+
+			thennable(then, function () {
+				state = RESOLVING
+				fire()
+			}, function () {
+				state = REJECTING
+				fire()
+			}, function () {
 				try {
 					if (state === RESOLVING && isFunction(successCallback)) {
 						promiseValue = successCallback(promiseValue);
@@ -1383,15 +1365,19 @@ var m = (function app(window, undefined) {
 					} else if (xhrOptions.type) {
 						response = new xhrOptions.type(response);
 					}
+					deferred.resolve(response)
+				} else {
+					deferred.reject(response)
 				}
 
 				deferred[e.type === "load" ? "resolve" : "reject"](response);
-			} catch (e) {
-				m.deferred.onerror(e);
+			}
+			catch (e) {
 				deferred.reject(e);
 			}
-
-			if (xhrOptions.background !== true) m.endComputation()
+			finally {
+				if (xhrOptions.background !== true) m.endComputation()
+			}
 		}
 
 		ajax(xhrOptions);
