@@ -6,6 +6,20 @@ var url = 'http://192.168.178.21:7676/'; // localhost (Wingerdweg 107-I)
 // components
 var Items = {};
 
+// @TODO: Turn into Mithril model
+var itemDragging = {
+  vm: undefined,
+  index: undefined,
+  set: function (vm, index) {
+    this.vm = vm;
+    this.index = index;
+  },
+  clear: function () {
+    this.vm = undefined;
+    this.index = undefined;
+  }
+};
+
 // model
 Items.Model = function (data) {
 
@@ -154,7 +168,7 @@ Items.View.Children = function (vm) {
     m('li', Items.View.FormAdd(vm))
   ]);
 };
-Items.View.Item = function (vm) {
+Items.View.Item = function (vm, index) {
   return m('li', [
     m('div.item', {
       class: [
@@ -162,16 +176,10 @@ Items.View.Item = function (vm) {
         vm.dragOver() ? 'is-drag-over ' : ''
       ].join(' '),
       draggable: true,
-      config: function (element, isInitialized) {
-        if (isInitialized) return;
-        element.addEventListener('dragstart', vm.ondragstart.bind(vm), false);
-        // required to allow drop
-        element.addEventListener('dragover', function (event) { event.preventDefault(); }, false);
-        element.addEventListener('dragenter', vm.ondragenter.bind(vm), false);
-        element.addEventListener('dragleave', vm.ondragleave.bind(vm), false);
-        element.addEventListener('dragend', vm.ondragend.bind(vm), false);
-        element.addEventListener('drop', vm.ondrop.bind(vm), false);
-      }
+      ondrop: vm.ondrop(index).bind(vm),
+      ondragleave: vm.ondragleave.bind(vm),
+      ondragover: vm.ondragover.bind(vm),
+      ondragstart: vm.ondragstart(index).bind(vm)
     }, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
       m('button.edit', {onclick: vm.edit.bind(vm)}, 'E'),
@@ -243,28 +251,40 @@ Items.ViewModel.prototype.add = function (event) {
 Items.ViewModel.prototype.toggle = function (event) {
   this.showChildren(!this.showChildren());
 };
-Items.ViewModel.prototype.ondragstart = function (event) {
-  window.itemDragging = this;
+Items.ViewModel.prototype.ondragstart = function (index) {
+  return function (event) {
+    this.dragOver(false);
+    window.itemDragging.set(this, index);
+  }
 };
-Items.ViewModel.prototype.ondragenter = function (event) {
-  if (window.itemDragging != this) {
+Items.ViewModel.prototype.ondragover = function (event) {
+  event.preventDefault();
+  if (window.itemDragging.vm != this) {
     this.dragOver(true);
-    m.redraw();
   }
 };
 Items.ViewModel.prototype.ondragleave = function (event) {
+  event.preventDefault();
   this.dragOver(false);
-  m.redraw();
 };
-Items.ViewModel.prototype.ondragend = function (event) { /* noop */ };
-Items.ViewModel.prototype.ondrop = function (event) {
-  // @TODO: Find way to compare ViewModels strictly (===)
-  if (window.itemDragging != this) {
-    window.itemDragging.model().order(this.model().getNextOrder());
-    window.itemDragging.model().save();
+Items.ViewModel.prototype.ondrop = function (index) {
+  return function (event) {
+    var vm, i;
+    event.preventDefault();
+    this.dragOver(false);
+    // @TODO: Find way to compare ViewModels strictly (===)
+    if (window.itemDragging.vm != this) {
+      window.itemDragging.vm.model().order(this.model().getNextOrder());
+      window.itemDragging.vm.model().save();
+      vm = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
+      if (vm.length > 0) {
+        // Only increment when item is not spliced before item dropped on
+        i = window.itemDragging.index > index ? index + 1 : index;
+        window.itemDragging.vm.model().parent().children().splice(i, 0, vm[0]);
+      }
+    }
+    window.itemDragging.clear();
   }
-  this.dragOver(false);
-  m.redraw();
 };
 
 // mount
