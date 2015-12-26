@@ -5,6 +5,8 @@ var url = 'http://192.168.178.21:7676/'; // localhost (Wingerdweg 107-I)
 
 // components
 var Items = {};
+var DropArea = {};
+
 
 // @TODO: Turn into Mithril model
 var itemDragging = {
@@ -109,6 +111,16 @@ Items.Model.prototype.removeChild = function (uid) {
     }
   }.bind(this));
 };
+Items.Model.prototype.getOrder = function (index) {
+  var children = this.parent().children();
+  if (index === 0) {
+    return children[0].model().order() / 2;
+  }
+  if (index === children.length - 1) {
+    return children[children.length - 1].model().order() + 1;
+  }
+  return ((children[index].model().order() + children[index + 1].model().order()) / 2);
+};
 Items.Model.prototype.getNextOrder = function () {
 
   // @TODO: check for this.order()
@@ -165,20 +177,64 @@ Items.View.Root = function (ctrl) {
 Items.View.Children = function (vm) {
   return  m('ul', {className: vm.showChildren() ? 'show-children' : ''}, [
     vm.model().children().map(Items.View.Item),
-    m('li', Items.View.FormAdd(vm))
+    m('li', [
+      DropArea.View(vm, vm.model().children().length, true),
+      Items.View.FormAdd(vm)
+    ])
   ]);
+};
+// @TODO: Move logic to DropArea ViewModel
+DropArea.View = function (vm, index, last) {
+  return m('div.drop-area', {
+    class: vm.dropAreaDragOver() || last && vm.dropAreaDragOverLast() ? 'is-drag-over' : '',
+    ondragover: function (event) {
+      event.preventDefault();
+      // guard against when item is dragged over own edges
+      if (window.itemDragging.index === index || window.itemDragging.index + 1 === index) {
+        return;
+      }
+      if (last) {
+        vm.dropAreaDragOverLast(true);
+      } else {
+        vm.dropAreaDragOver(true);
+      }
+    },
+    ondragleave: function (event) {
+      event.preventDefault();
+      vm.dropAreaDragOver(false);
+      vm.dropAreaDragOverLast(false);
+    },
+    ondrop: function (event) {
+      event.preventDefault();
+      vm.dropAreaDragOver(false);
+      vm.dropAreaDragOverLast(false);
+      if (window.itemDragging.index !== index && window.itemDragging.index + 1 !== index) {
+        var order, children;
+        if (last) {
+          children = vm.model().children();
+          order = children[children.length - 1].model().order() + 1;
+        } else {
+          order = vm.model().getOrder(index);
+        }
+        window.itemDragging.vm.model().order(order);
+        window.itemDragging.vm.model().save();
+        var item = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
+        if (item.length > 0) {
+          // Decrement when item is spliced before index
+          var i = window.itemDragging.index < index ? index - 1 : index;
+          window.itemDragging.vm.model().parent().children().splice(i, 0, item[0]);
+        }
+      }
+      window.itemDragging.clear();
+    }
+  });
 };
 Items.View.Item = function (vm, index) {
   return m('li', [
+    DropArea.View(vm, index),
     m('div.item', {
-      class: [
-        vm.isEditing() ? 'is-editing ' : '',
-        vm.dragOver() ? 'is-drag-over ' : ''
-      ].join(' '),
+      class: vm.isEditing() ? 'is-editing ' : '',
       draggable: true,
-      ondrop: vm.ondrop(index).bind(vm),
-      ondragleave: vm.ondragleave.bind(vm),
-      ondragover: vm.ondragover.bind(vm),
       ondragstart: vm.ondragstart(index).bind(vm)
     }, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
@@ -224,6 +280,8 @@ Items.ViewModel = function (model) {
   this.editVal = m.prop(model.text());
   this.showChildren = m.prop(model.isRoot());
   this.dragOver = m.prop(false);
+  this.dropAreaDragOver = m.prop(false);
+  this.dropAreaDragOverLast = m.prop(false);
 };
 Items.ViewModel.prototype.del = function (event) {
   event.preventDefault();
@@ -253,38 +311,8 @@ Items.ViewModel.prototype.toggle = function (event) {
 };
 Items.ViewModel.prototype.ondragstart = function (index) {
   return function (event) {
-    this.dragOver(false);
     window.itemDragging.set(this, index);
-  }
-};
-Items.ViewModel.prototype.ondragover = function (event) {
-  event.preventDefault();
-  if (window.itemDragging.vm != this) {
-    this.dragOver(true);
-  }
-};
-Items.ViewModel.prototype.ondragleave = function (event) {
-  event.preventDefault();
-  this.dragOver(false);
-};
-Items.ViewModel.prototype.ondrop = function (index) {
-  return function (event) {
-    var vm, i;
-    event.preventDefault();
-    this.dragOver(false);
-    // @TODO: Find way to compare ViewModels strictly (===)
-    if (window.itemDragging.vm != this) {
-      window.itemDragging.vm.model().order(this.model().getNextOrder());
-      window.itemDragging.vm.model().save();
-      vm = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
-      if (vm.length > 0) {
-        // Only increment when item is not spliced before item dropped on
-        i = window.itemDragging.index > index ? index + 1 : index;
-        window.itemDragging.vm.model().parent().children().splice(i, 0, vm[0]);
-      }
-    }
-    window.itemDragging.clear();
-  }
+  };
 };
 
 // mount

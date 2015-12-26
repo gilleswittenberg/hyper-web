@@ -31,12 +31,14 @@ ul {
 
 div.item {
 
+  /*
   margin-bottom: $spacingSmall;
 
   &.is-drag-over {
     border-bottom: $spacingSmall solid black;
     margin-bottom: 0;
   }
+  */
 
   span.content {
     display: block;
@@ -81,6 +83,16 @@ div.item {
     form.edit {
       display: block;
     }
+  }
+}
+
+div.drop-area {
+  height: $spacingSmall;
+  &.is-drag-over {
+    height: $sizeButton;
+    border-top: $spacingSmall solid white;
+    border-bottom: $spacingSmall solid white;
+    background-color: pink;
   }
 }
 
