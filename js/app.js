@@ -119,7 +119,7 @@ Items.Model.prototype.getOrder = function (index) {
   if (index === children.length - 1) {
     return children[children.length - 1].model().order() + 1;
   }
-  return ((children[index].model().order() + children[index + 1].model().order()) / 2);
+  return ((children[index - 1].model().order() + children[index].model().order()) / 2);
 };
 Items.Model.prototype.getNextOrder = function () {
 
