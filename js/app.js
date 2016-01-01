@@ -93,6 +93,24 @@ Items.Model.prototype.save = function () {
     this.uid(response.uid);
   }.bind(this));
 };
+Items.Model.prototype.saveRelation = function (parent, parentUId, order) {
+  var data = {
+    uid: this.uid(),
+    oldParentUId: this.parentUId(),
+    parentUId: parentUId,
+    order: order
+  };
+  this.parentUId(parentUId);
+  this.parent(parent);
+  this.order(order);
+  return m.request({
+    method: 'PUT',
+    url: url + 'relations/',
+    data: data
+  }).then(function (response) {
+    // @TODO: Set order on item
+  }.bind(this));
+};
 Items.Model.prototype.createChild = function (text) {
   var child = new Items.Model({
     parent: this,
@@ -116,7 +134,7 @@ Items.Model.prototype.getOrder = function (index) {
   if (index === 0) {
     return children[0].model().order() / 2;
   }
-  if (index === children.length - 1) {
+  if (index === children.length) {
     return children[children.length - 1].model().order() + 1;
   }
   return ((children[index - 1].model().order() + children[index].model().order()) / 2);
@@ -150,6 +168,16 @@ Items.Model.prototype.getNextOrder = function () {
 
   // return value between this and next order
   return this.order() + (nextSibling.order() - this.order()) / 2;
+};
+Items.Model.prototype.isParent = function (model) {
+  var parent = model.parent();
+  while (parent) {
+    if (parent === this) {
+      return true;
+    }
+    parent = parent.parent();
+  }
+  return false;
 };
 
 // controller
@@ -188,10 +216,25 @@ DropArea.View = function (vm, index, last) {
   return m('div.drop-area', {
     class: vm.dropAreaDragOver() || last && vm.dropAreaDragOverLast() ? 'is-drag-over' : '',
     ondragover: function (event) {
+      var children;
       event.preventDefault();
-      // guard against when item is dragged over own edges
-      if (window.itemDragging.index === index || window.itemDragging.index + 1 === index) {
+      // guard against dropping parent to children
+      if (window.itemDragging.vm.model().isParent(vm.model())) {
         return;
+      }
+      if (window.itemDragging.vm.model().parent() === vm.model().parent()) {
+        // guard against when item is dragged over own edges
+        if (window.itemDragging.index === index || window.itemDragging.index + 1 === index) {
+          return;
+        }
+      }
+      // guard against last child
+      if (last && window.itemDragging.vm.model().parent() === vm.model()) {
+        children = window.itemDragging.vm.model().parent().children();
+        // last child
+        if (children[children.length - 1] === window.itemDragging.vm) {
+          return;
+        }
       }
       if (last) {
         vm.dropAreaDragOverLast(true);
@@ -205,24 +248,64 @@ DropArea.View = function (vm, index, last) {
       vm.dropAreaDragOverLast(false);
     },
     ondrop: function (event) {
+
+      var order, children, item, i;
+
       event.preventDefault();
+
       vm.dropAreaDragOver(false);
       vm.dropAreaDragOverLast(false);
-      if (window.itemDragging.index !== index && window.itemDragging.index + 1 !== index) {
-        var order, children;
+
+      // @TODO: Clean this mess up!
+      // root, last
+      if (last && vm.model().isRoot()) {
+        order = vm.model().children()[0].model().getOrder(vm.model().children().length);
+        if (window.itemDragging.vm.model().parent().isRoot()) {
+          window.itemDragging.vm.model().order(order);
+          window.itemDragging.vm.model().save();
+        } else {
+          window.itemDragging.vm.model().saveRelation(vm.model().parent(), vm.model().uid(), order);
+        }
+        item = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
+        if (item.length > 0) {
+          vm.model().children().splice(index, 0, item[0]);
+        }
+      }
+      // other parent
+      else if (window.itemDragging.vm.model().parent() !== vm.model().parent()) {
+
         if (last) {
+          // @TODO: Handle this logic in getOrder
           children = vm.model().children();
           order = children[children.length - 1].model().order() + 1;
         } else {
           order = vm.model().getOrder(index);
         }
-        window.itemDragging.vm.model().order(order);
-        window.itemDragging.vm.model().save();
-        var item = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
+        window.itemDragging.vm.model().saveRelation(vm.model(), vm.model().parentUId(), order);
+        item = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
         if (item.length > 0) {
-          // Decrement when item is spliced before index
-          var i = window.itemDragging.index < index ? index - 1 : index;
-          window.itemDragging.vm.model().parent().children().splice(i, 0, item[0]);
+          vm.model().parent().children().splice(index, 0, item[0]);
+        }
+      }
+      else {
+        // guard against own edges
+        if (window.itemDragging.index !== index && window.itemDragging.index + 1 !== index) {
+          if (last) {
+            // @TODO: Handle this logic in getOrder
+            children = vm.model().children();
+            order = children[children.length - 1].model().order() + 1;
+          } else {
+            order = vm.model().getOrder(index);
+          }
+          window.itemDragging.vm.model().order(order);
+          window.itemDragging.vm.model().save();
+          item = window.itemDragging.vm.model().parent().children().splice(window.itemDragging.index, 1);
+          if (item.length > 0) {
+            // Decrement when item is spliced before index
+            i = window.itemDragging.index < index ? index - 1 : index;
+            // @TODO: Use vm.model().parent()
+            window.itemDragging.vm.model().parent().children().splice(i, 0, item[0]);
+          }
         }
       }
       window.itemDragging.clear();
