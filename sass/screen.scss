@@ -52,7 +52,13 @@ div.item {
     }
   }
 
-  button.edit, button.delete {
+  &.has-children {
+    span.content {
+      margin-right: 2 * ($sizeButton + $spacingSmall);
+    }
+  }
+
+  button.add, button.edit, button.delete {
     float: right;
     display: inline-block;
     html.no-touchevents & {
@@ -63,11 +69,26 @@ div.item {
 
   html.no-touchevents & {
     &:hover {
-      button.edit, button.delete {
+      button.add, button.edit, button.delete {
         display: inline-block;
       }
       span.content {
-        margin-right: 2 * ($sizeButton + $spacingSmall);
+        margin-right: 3 * ($sizeButton + $spacingSmall);
+      }
+      &.has-children {
+        span.content {
+          margin-right: 2 * ($sizeButton + $spacingSmall);
+        }
+      }
+    }
+  }
+
+  html.no-touchevents & {
+    &:hover {
+      &.has-children {
+        button.add {
+          display: none;
+        }
       }
     }
   }
@@ -77,7 +98,7 @@ div.item {
   }
 
   &.is-editing {
-    span.content, button.edit, button.delete {
+    span.content, button.add, button.edit, button.delete {
       display: none !important;
     }
     form.edit {

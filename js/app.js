@@ -216,14 +216,14 @@ DropArea.View = function (vm, index, last) {
   return m('div.drop-area', {
     class: vm.dropAreaDragOver() || last && vm.dropAreaDragOverLast() ? 'is-drag-over' : '',
     ondragover: function (event) {
+
       var children;
-      event.preventDefault();
       // guard against dropping parent to children
       if (window.itemDragging.vm.model().isParent(vm.model())) {
         return;
       }
+      // guard against when item is dragged over own edges
       if (window.itemDragging.vm.model().parent() === vm.model().parent()) {
-        // guard against when item is dragged over own edges
         if (window.itemDragging.index === index || window.itemDragging.index + 1 === index) {
           return;
         }
@@ -236,6 +236,9 @@ DropArea.View = function (vm, index, last) {
           return;
         }
       }
+
+      event.preventDefault();
+
       if (last) {
         vm.dropAreaDragOverLast(true);
       } else {
@@ -316,12 +319,16 @@ Items.View.Item = function (vm, index) {
   return m('li', [
     DropArea.View(vm, index),
     m('div.item', {
-      class: vm.isEditing() ? 'is-editing ' : '',
+      class: [
+        vm.isEditing() ? 'is-editing' : '',
+        vm.hasChildren() ? 'has-children' : ''
+      ].join(' '),
       draggable: true,
       ondragstart: vm.ondragstart(index).bind(vm)
     }, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
       m('button.edit', {onclick: vm.edit.bind(vm)}, 'E'),
+      m('button.add', {onclick: vm.toggleAdd.bind(vm)}, '+'),
       m('span.content', {onclick: vm.toggle.bind(vm)}, vm.model().text()),
       Items.View.FormEdit(vm)
     ]),
@@ -365,6 +372,11 @@ Items.ViewModel = function (model) {
   this.dragOver = m.prop(false);
   this.dropAreaDragOver = m.prop(false);
   this.dropAreaDragOverLast = m.prop(false);
+  this.hasChildren = m.prop(model.children().length > 0);
+};
+Items.ViewModel.prototype.toggleAdd = function (event) {
+  event.preventDefault();
+  this.showChildren(!this.showChildren());
 };
 Items.ViewModel.prototype.del = function (event) {
   event.preventDefault();
@@ -390,6 +402,10 @@ Items.ViewModel.prototype.add = function (event) {
   }
 };
 Items.ViewModel.prototype.toggle = function (event) {
+  // guard against no children
+  if (this.model().children().length === 0) {
+    return;
+  }
   this.showChildren(!this.showChildren());
 };
 Items.ViewModel.prototype.ondragstart = function (index) {
