@@ -217,6 +217,7 @@ DropArea.View = function (vm, index, last) {
     class: vm.dropAreaDragOver() || last && vm.dropAreaDragOverLast() ? 'is-drag-over' : '',
     ondragover: function (event) {
 
+      // @TODO: Clean this mess up!
       var children;
       // guard against dropping parent to children
       if (window.itemDragging.vm.model().isParent(vm.model())) {
@@ -324,7 +325,8 @@ Items.View.Item = function (vm, index) {
         vm.hasChildren() ? 'has-children' : ''
       ].join(' '),
       draggable: true,
-      ondragstart: vm.ondragstart(index).bind(vm)
+      ondragstart: vm.ondragstart(index).bind(vm),
+      ondragenter: vm.ondragenter.bind(vm)
     }, [
       m('button.delete', {onclick: vm.del.bind(vm)}, 'X'),
       m('button.edit', {onclick: vm.edit.bind(vm)}, 'E'),
@@ -412,6 +414,11 @@ Items.ViewModel.prototype.ondragstart = function (index) {
   return function (event) {
     window.itemDragging.set(this, index);
   };
+};
+Items.ViewModel.prototype.ondragenter = function () {
+  if (window.itemDragging.vm !== this) {
+    this.showChildren(true);
+  }
 };
 
 // mount
